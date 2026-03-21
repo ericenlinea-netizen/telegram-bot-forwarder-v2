@@ -27,8 +27,7 @@ async def handler(event):
 
     print("📩 Mensaje detectado:", mensaje)
 
-    entity = await bot.get_entity(grupo_destino)
-    await bot.send_message(entity, mensaje)
+    entity = await bot.get_input_entity(grupo_destino)
 
 
 async def main():

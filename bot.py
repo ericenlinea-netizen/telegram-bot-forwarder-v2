@@ -22,15 +22,19 @@ cumplidos = 0
 no_cumplidos = 0
 
 
-# 📊 COMANDO /stats
-@client.on(events.NewMessage(pattern='/stats'))
+# 📊 COMANDO PERSONALIZADO
+@client.on(events.NewMessage(pattern='/stats_bot'))
 async def stats(event):
     global total_ciclos, cumplidos, no_cumplidos
+
+    # Solo responde en el grupo destino (extra seguridad)
+    if event.chat_id != GRUPO_DESTINO:
+        return
 
     efectividad = (cumplidos / total_ciclos * 100) if total_ciclos > 0 else 0
 
     mensaje = f"""
-📊 ESTADÍSTICAS
+📊 ESTADÍSTICAS BOT
 
 🔁 Ciclos totales: {total_ciclos}
 ✅ Cumplidos: {cumplidos}
@@ -87,7 +91,7 @@ async def handler(event):
         print("❌ Error:", e)
 
 
-print("🚀 BOT CON ESTADÍSTICAS INICIADO")
+print("🚀 BOT CON STATS PERSONALIZADO INICIADO")
 
 client.start()
 client.run_until_disconnected()

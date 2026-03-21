@@ -10,6 +10,9 @@ api_hash = os.getenv("API_HASH")
 CANAL_ORIGEN = int(os.getenv("CANAL_ORIGEN"))
 GRUPO_DESTINO = int(os.getenv("GRUPO_DESTINO"))
 
+# ⚠️ TU ID (para evitar interferencia de otros bots)
+TU_ID = 5019372975
+
 client = TelegramClient('session', api_id, api_hash)
 
 # 🔢 VARIABLES
@@ -22,7 +25,7 @@ cumplidos = 0
 no_cumplidos = 0
 
 
-# 📊 COMANDO CONTROLADO (SIN INTERFERENCIA)
+# 📊 COMANDO SEGURO
 @client.on(events.NewMessage)
 async def comandos(event):
     global total_ciclos, cumplidos, no_cumplidos
@@ -30,9 +33,12 @@ async def comandos(event):
     if event.chat_id != GRUPO_DESTINO:
         return
 
+    if event.sender_id != TU_ID:
+        return
+
     texto = event.raw_text.strip().lower()
 
-    if texto != "/stats_bot":
+    if texto != "/eric_9281_stats":
         return
 
     efectividad = (cumplidos / total_ciclos * 100) if total_ciclos > 0 else 0
@@ -59,12 +65,14 @@ async def handler(event):
         if event.chat_id != CANAL_ORIGEN:
             return
 
+        # 🔧 LIMPIEZA DE TEXTO (CLAVE)
         texto = event.raw_text.upper()
+        texto = texto.replace("🍀", "").replace("!", "").strip()
+
+        print("📩 Mensaje:", texto)
 
         if not texto:
             return
-
-        print("📩 Mensaje:", texto)
 
         # 🔴 RED
         if "RED" in texto:
@@ -80,8 +88,8 @@ async def handler(event):
             await client.send_message(GRUPO_DESTINO, "🔴 RED DETECTADO")
             return
 
-        # 🟢 GREEN
-        if esperando_green and "GREEN" in texto:
+        # 🟢 GREEN (ROBUSTO)
+        if esperando_green and ("GREEN" in texto):
             contador_green += 1
             print(f"GREEN #{contador_green}")
 
@@ -95,7 +103,7 @@ async def handler(event):
         print("❌ Error:", e)
 
 
-print("🚀 BOT SIN INTERFERENCIA INICIADO")
+print("🚀 BOT FINAL INICIADO")
 
 client.start()
 client.run_until_disconnected()

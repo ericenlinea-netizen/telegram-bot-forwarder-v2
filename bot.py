@@ -8,7 +8,7 @@ api_id = int(os.getenv("API_ID"))
 api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
 
-canal_origen = int(os.getenv("CANAL_ORIGEN"))
+canal_origen = os.getenv("CANAL_ORIGEN")
 grupo_destino = int(os.getenv("GRUPO_DESTINO"))
 
 # 🔹 Cliente usuario (lee canal)

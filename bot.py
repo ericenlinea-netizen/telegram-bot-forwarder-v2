@@ -11,19 +11,31 @@ bot_token = os.getenv("BOT_TOKEN")
 canal_origen = int(os.getenv("CANAL_ORIGEN"))
 grupo_destino = int(os.getenv("GRUPO_DESTINO"))
 
+# 🔹 Cliente usuario (lee canal)
+user = TelegramClient('user_session', api_id, api_hash)
+
+# 🔹 Cliente bot (envía mensajes)
 bot = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 
-@bot.on(events.NewMessage(chats=canal_origen))
+
+@user.on(events.NewMessage(chats=canal_origen))
 async def handler(event):
     mensaje = event.message.text
 
     if not mensaje:
         return
 
-    print("📩 Mensaje recibido:", mensaje)
+    print("📩 Mensaje detectado:", mensaje)
 
     await bot.send_message(grupo_destino, mensaje)
 
-print("🚀 BOT INICIADO CORRECTAMENTE")
 
-bot.run_until_disconnected()
+async def main():
+    await user.start()  # Aquí se loguea tu cuenta
+    print("👤 USER conectado")
+    print("🤖 BOT listo")
+    await user.run_until_disconnected()
+
+
+with bot:
+    bot.loop.run_until_complete(main())

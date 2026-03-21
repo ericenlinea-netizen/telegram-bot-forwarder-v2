@@ -1,5 +1,4 @@
 import os
-import asyncio
 from telethon import TelegramClient, events
 from dotenv import load_dotenv
 
@@ -11,13 +10,9 @@ api_hash = os.getenv("API_HASH")
 CANAL_ORIGEN = int(os.getenv("CANAL_ORIGEN"))
 GRUPO_DESTINO = int(os.getenv("GRUPO_DESTINO"))
 
-# Fix event loop
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-
 client = TelegramClient('session', api_id, api_hash)
 
-# 🔢 VARIABLES DE CONTROL
+# 🔢 VARIABLES
 esperando_green = False
 contador_green = 0
 
@@ -37,7 +32,7 @@ async def handler(event):
 
         print("📩 Mensaje:", texto)
 
-        # 🔴 RED DETECTADO
+        # 🔴 RED
         if "RED" in texto:
             if esperando_green and contador_green < 3:
                 await client.send_message(GRUPO_DESTINO, "❌ OBJETIVO NO CUMPLIDO")
@@ -48,7 +43,7 @@ async def handler(event):
             await client.send_message(GRUPO_DESTINO, "🔴 RED DETECTADO")
             return
 
-        # 🟢 GREEN DETECTADO
+        # 🟢 GREEN
         if esperando_green and "GREEN" in texto:
             contador_green += 1
 
@@ -63,10 +58,7 @@ async def handler(event):
         print("❌ Error:", e)
 
 
-async def main():
-    await client.start()
-    print("🚀 BOT INTELIGENTE INICIADO")
-    await client.run_until_disconnected()
+print("🚀 BOT INTELIGENTE INICIADO")
 
-
-loop.run_until_complete(main())
+client.start()
+client.run_until_disconnected()

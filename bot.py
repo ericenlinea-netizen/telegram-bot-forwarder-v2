@@ -18,7 +18,22 @@ user = TelegramClient('user_session', api_id, api_hash)
 bot = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 
 
-@user.on(events.NewMessage(chats=canal_origen))
+@user.on(events.NewMessage)
+async def handler(event):
+    chat = await event.get_chat()
+
+    if chat.id != int(os.getenv("CANAL_ORIGEN")):
+        return
+
+    mensaje = event.message.text
+
+    if not mensaje:
+        return
+
+    print("📩 Mensaje detectado:", mensaje)
+
+    entity = await bot.get_input_entity(grupo_destino)
+    await bot.send_message(entity, mensaje)
 async def handler(event):
     mensaje = event.message.text
 

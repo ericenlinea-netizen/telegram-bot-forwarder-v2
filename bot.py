@@ -22,13 +22,17 @@ cumplidos = 0
 no_cumplidos = 0
 
 
-# 📊 COMANDO PERSONALIZADO
-@client.on(events.NewMessage(pattern='/stats_bot'))
-async def stats(event):
+# 📊 COMANDO CONTROLADO (SIN INTERFERENCIA)
+@client.on(events.NewMessage)
+async def comandos(event):
     global total_ciclos, cumplidos, no_cumplidos
 
-    # Solo responde en el grupo destino (extra seguridad)
     if event.chat_id != GRUPO_DESTINO:
+        return
+
+    texto = event.raw_text.strip().lower()
+
+    if texto != "/stats_bot":
         return
 
     efectividad = (cumplidos / total_ciclos * 100) if total_ciclos > 0 else 0
@@ -91,7 +95,7 @@ async def handler(event):
         print("❌ Error:", e)
 
 
-print("🚀 BOT CON STATS PERSONALIZADO INICIADO")
+print("🚀 BOT SIN INTERFERENCIA INICIADO")
 
 client.start()
 client.run_until_disconnected()

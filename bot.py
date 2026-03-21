@@ -1,5 +1,4 @@
 import os
-import asyncio
 from telethon import TelegramClient, events
 from dotenv import load_dotenv
 
@@ -7,59 +6,33 @@ load_dotenv()
 
 api_id = int(os.getenv("API_ID"))
 api_hash = os.getenv("API_HASH")
-bot_token = os.getenv("BOT_TOKEN")
+phone = os.getenv("PHONE")
 
 CANAL_ORIGEN = int(os.getenv("CANAL_ORIGEN"))
 GRUPO_DESTINO = int(os.getenv("GRUPO_DESTINO"))
 
-# Crear loop manual (compatibilidad)
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-
-# Cliente USER (lee canal)
-user = TelegramClient('user_session', api_id, api_hash)
-
-# Cliente BOT (envía mensajes)
-bot = TelegramClient('bot_session', api_id, api_hash)
+client = TelegramClient('session', api_id, api_hash)
 
 
-@user.on(events.NewMessage)
+@client.on(events.NewMessage)
 async def handler(event):
-    try:
-        chat = await event.get_chat()
 
-        # Filtrar solo el canal origen
-        if chat.id != CANAL_ORIGEN:
-            return
+    # Filtrar solo canal origen
+    if event.chat_id != CANAL_ORIGEN:
+        return
 
-        mensaje = event.message.text
+    mensaje = event.raw_text
 
-        if not mensaje:
-            return
+    if not mensaje:
+        return
 
-        print("📩 Mensaje detectado:", mensaje)
+    print("📩 Mensaje detectado:", mensaje)
 
-        # Obtener grupo destino correctamente
-        entity = await bot.get_input_entity(GRUPO_DESTINO)
-
-        await bot.send_message(entity, mensaje)
-
-    except Exception as e:
-        print("❌ Error:", e)
+    await client.send_message(GRUPO_DESTINO, mensaje)
 
 
-async def main():
-    # Iniciar USER
-    await user.start()
-    print("👤 USER conectado")
+client.start(phone)
 
-    # Iniciar BOT solo si no está conectado (evita flood)
-    if not bot.is_connected():
-        await bot.start(bot_token=bot_token)
+print("🚀 BOT INICIADO (MODO USER)")
 
-    print("🤖 BOT listo")
-
-    await user.run_until_disconnected()
-
-
-loop.run_until_complete(main())
+client.run_until_disconnected()

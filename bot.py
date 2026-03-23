@@ -10,26 +10,29 @@ api_hash = os.getenv("API_HASH")
 CANAL_ORIGEN = int(os.getenv("CANAL_ORIGEN"))
 GRUPO_DESTINO = int(os.getenv("GRUPO_DESTINO"))
 
-# ⚠️ TU ID (para evitar interferencia de otros bots)
 TU_ID = 5019372975
 
 client = TelegramClient('session', api_id, api_hash)
 
 # 🔢 VARIABLES
-esperando_green = False
+esperando = False
 contador_green = 0
 
-# 📊 ESTADÍSTICAS
+# 📊 ESTADÍSTICAS GENERALES
 total_ciclos = 0
-cumplidos = 0
-no_cumplidos = 0
+
+# 📊 ESCENARIOS
+escenarios = {
+    1: {"objetivo": 2, "activo": False, "cumplido": False, "inicios": 0, "exitos": 0, "fallos": 0},
+    2: {"objetivo": 3, "activo": False, "cumplido": False, "inicios": 0, "exitos": 0, "fallos": 0},
+    3: {"objetivo": 4, "activo": False, "cumplido": False, "inicios": 0, "exitos": 0, "fallos": 0},
+    4: {"objetivo": 5, "activo": False, "cumplido": False, "inicios": 0, "exitos": 0, "fallos": 0},
+}
 
 
-# 📊 COMANDO SEGURO
+# 📊 COMANDO STATS
 @client.on(events.NewMessage)
 async def comandos(event):
-    global total_ciclos, cumplidos, no_cumplidos
-
     if event.chat_id != GRUPO_DESTINO:
         return
 
@@ -41,31 +44,33 @@ async def comandos(event):
     if texto != "/eric_9281_stats":
         return
 
-    efectividad = (cumplidos / total_ciclos * 100) if total_ciclos > 0 else 0
+    mensaje = "📊 ESTADÍSTICAS\n\n"
 
-    mensaje = f"""
-📊 ESTADÍSTICAS BOT
+    for i in escenarios:
+        esc = escenarios[i]
+        efectividad = (esc["exitos"] / esc["inicios"] * 100) if esc["inicios"] > 0 else 0
 
-🔁 Ciclos totales: {total_ciclos}
-✅ Cumplidos: {cumplidos}
-❌ No cumplidos: {no_cumplidos}
-
+        mensaje += f"""
+🎯 ESCENARIO {i}
+▶️ Inicios: {esc["inicios"]}
+✅ Éxitos: {esc["exitos"]}
+❌ Fallos: {esc["fallos"]}
 📈 Efectividad: {efectividad:.2f}%
+
 """
+
     await event.reply(mensaje)
 
 
 # 🧠 LÓGICA PRINCIPAL
 @client.on(events.NewMessage)
 async def handler(event):
-    global esperando_green, contador_green
-    global total_ciclos, cumplidos, no_cumplidos
+    global esperando, contador_green, total_ciclos
 
     try:
         if event.chat_id != CANAL_ORIGEN:
             return
 
-        # 🔧 LIMPIEZA DE TEXTO (CLAVE)
         texto = event.raw_text.upper()
         texto = texto.replace("🍀", "").replace("!", "").strip()
 
@@ -76,34 +81,46 @@ async def handler(event):
 
         # 🔴 RED
         if "RED" in texto:
-            if esperando_green:
-                if contador_green < 3:
-                    no_cumplidos += 1
-                    await client.send_message(GRUPO_DESTINO, "❌ OBJETIVO NO CUMPLIDO")
 
-            esperando_green = True
+            if esperando:
+                for i in escenarios:
+                    esc = escenarios[i]
+                    if esc["activo"] and not esc["cumplido"]:
+                        esc["fallos"] += 1
+                        await client.send_message(GRUPO_DESTINO, f"❌ ESCENARIO {i} NO CUMPLIDO")
+
+            esperando = True
             contador_green = 0
             total_ciclos += 1
+
+            # activar escenarios
+            for i in escenarios:
+                escenarios[i]["activo"] = True
+                escenarios[i]["cumplido"] = False
+                escenarios[i]["inicios"] += 1
 
             await client.send_message(GRUPO_DESTINO, "🔴 RED DETECTADO")
             return
 
-        # 🟢 GREEN (ROBUSTO)
-        if esperando_green and ("GREEN" in texto):
+        # 🟢 GREEN
+        if esperando and "GREEN" in texto:
             contador_green += 1
             print(f"GREEN #{contador_green}")
 
-            if contador_green == 3:
-                cumplidos += 1
-                await client.send_message(GRUPO_DESTINO, "🎯 OBJETIVO CUMPLIDO")
-                esperando_green = False
-                contador_green = 0
+            for i in escenarios:
+                esc = escenarios[i]
+
+                if esc["activo"] and not esc["cumplido"]:
+                    if contador_green == esc["objetivo"]:
+                        esc["cumplido"] = True
+                        esc["exitos"] += 1
+                        await client.send_message(GRUPO_DESTINO, f"🎯 ESCENARIO {i} CUMPLIDO")
 
     except Exception as e:
         print("❌ Error:", e)
 
 
-print("🚀 BOT FINAL INICIADO")
+print("🚀 BOT MULTI ESCENARIOS INICIADO")
 
 client.start()
 client.run_until_disconnected()

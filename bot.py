@@ -18,9 +18,6 @@ client = TelegramClient('session', api_id, api_hash)
 esperando = False
 contador_green = 0
 
-# 📊 ESTADÍSTICAS GENERALES
-total_ciclos = 0
-
 # 📊 ESCENARIOS
 escenarios = {
     1: {"objetivo": 2, "activo": False, "cumplido": False, "inicios": 0, "exitos": 0, "fallos": 0},
@@ -41,16 +38,15 @@ async def comandos(event):
 
     texto = event.raw_text.strip().lower()
 
-    if texto != "/eric_9281_stats":
-        return
+    # 📊 STATS
+    if texto == "/eric_9281_stats":
+        mensaje = "📊 ESTADÍSTICAS\n\n"
 
-    mensaje = "📊 ESTADÍSTICAS\n\n"
+        for i in escenarios:
+            esc = escenarios[i]
+            efectividad = (esc["exitos"] / esc["inicios"] * 100) if esc["inicios"] > 0 else 0
 
-    for i in escenarios:
-        esc = escenarios[i]
-        efectividad = (esc["exitos"] / esc["inicios"] * 100) if esc["inicios"] > 0 else 0
-
-        mensaje += f"""
+            mensaje += f"""
 🎯 ESCENARIO {i}
 ▶️ Inicios: {esc["inicios"]}
 ✅ Éxitos: {esc["exitos"]}
@@ -58,14 +54,45 @@ async def comandos(event):
 📈 Efectividad: {efectividad:.2f}%
 
 """
+        await event.reply(mensaje)
 
-    await event.reply(mensaje)
+    # 🤖 RECOMENDACIÓN
+    if texto == "/recomendacion":
+
+        ranking = []
+
+        for i in escenarios:
+            esc = escenarios[i]
+            efectividad = (esc["exitos"] / esc["inicios"] * 100) if esc["inicios"] > 0 else 0
+            ranking.append((i, efectividad))
+
+        # ordenar de mayor a menor
+        ranking.sort(key=lambda x: x[1], reverse=True)
+
+        mensaje = "🤖 RECOMENDACIÓN AUTOMÁTICA\n\n"
+
+        for idx, (esc, ef) in enumerate(ranking):
+            medalla = ["🥇", "🥈", "🥉", "🏅"]
+            mensaje += f"{medalla[idx]} Escenario {esc} → {ef:.2f}%\n"
+
+        mejor = ranking[0][0]
+
+        mensaje += f"\n👉 Mejor opción: ESCENARIO {mejor}"
+
+        if mejor == 1:
+            mensaje += " (más seguro)"
+        elif mejor == 2:
+            mensaje += " (balance riesgo/beneficio)"
+        else:
+            mensaje += " (más agresivo)"
+
+        await event.reply(mensaje)
 
 
 # 🧠 LÓGICA PRINCIPAL
 @client.on(events.NewMessage)
 async def handler(event):
-    global esperando, contador_green, total_ciclos
+    global esperando, contador_green
 
     try:
         if event.chat_id != CANAL_ORIGEN:
@@ -91,9 +118,7 @@ async def handler(event):
 
             esperando = True
             contador_green = 0
-            total_ciclos += 1
 
-            # activar escenarios
             for i in escenarios:
                 escenarios[i]["activo"] = True
                 escenarios[i]["cumplido"] = False
@@ -120,7 +145,7 @@ async def handler(event):
         print("❌ Error:", e)
 
 
-print("🚀 BOT MULTI ESCENARIOS INICIADO")
+print("🚀 BOT CON IA DE RECOMENDACIÓN INICIADO")
 
 client.start()
 client.run_until_disconnected()
